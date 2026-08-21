@@ -1,0 +1,102 @@
+name: compat-stamp
+
+# The only writer of compat/ (see compat/README.md — CI-stamped only, never
+# hand-edited). A run of trunk's reusable module-system-tests.yml workflow
+# reports its outcome by sending this repo a repository_dispatch:
+#
+#   POST /repos/castacks/airstack-modules-index/dispatches
+#   {
+#     "event_type": "compat-stamp",
+#     "client_payload": {
+#       "module":        "optitrack",                 # must match a registered entry
+#       "module_ref":    "v0.1.0" | "<40-hex sha>",
+#       "airstack_ref":  "v0.19.0",
+#       "marks":         "build_packages or liveliness or optitrack",
+#       "result":        "pass" | "fail",
+#       "run_url":       "https://github.com/castacks/asm_optitrack/actions/runs/…",
+#       "image_digests": {"robot": "sha256:…"}        # optional
+#     }
+#   }
+#
+# This appends one row to compat/<module>.yaml and commits as
+# github-actions[bot]. NOTE: the dispatch SENDER wiring (a final step in
+# module CI posting this payload) lands trunk-side later; until it does, this
+# workflow simply never fires. It is kept valid and complete so the receiving
+# contract is fixed before senders exist.
+
+on:
+  repository_dispatch:
+    types: [compat-stamp]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: compat-stamp   # serialize stamps so concurrent dispatches don't race the push
+  cancel-in-progress: false
+
+jobs:
+  stamp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Append compat row from client payload
+        env:
+          PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, re, sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import yaml
+
+          payload = json.loads(os.environ["PAYLOAD"] or "{}")
+
+          module = str(payload.get("module") or "")
+          if not re.fullmatch(r"[a-z][a-z0-9_]*", module):
+              sys.exit(f"::error::invalid module name in payload: {module!r}")
+          # Stamp only registered (or shelved) modules — a dispatch may not
+          # create compat files for entries the registry has never seen.
+          if not (Path("modules") / f"{module}.yaml").is_file() and \
+             not (Path("unmaintained") / f"{module}.yaml").is_file():
+              sys.exit(f"::error::{module!r} is not a registered module")
+
+          required = ["module_ref", "airstack_ref", "marks", "result", "run_url"]
+          missing = [k for k in required if not str(payload.get(k) or "").strip()]
+          if missing:
+              sys.exit(f"::error::payload missing required field(s): {missing}")
+          if payload["result"] not in ("pass", "fail"):
+              sys.exit(f"::error::result must be pass|fail, got {payload['result']!r}")
+          if not str(payload["run_url"]).startswith("https://github.com/"):
+              sys.exit("::error::run_url must be a https://github.com/ Actions run URL")
+
+          row = {k: str(payload[k]) for k in required}
+          digests = payload.get("image_digests")
+          if isinstance(digests, dict) and digests:
+              row["image_digests"] = {str(k): str(v) for k, v in digests.items()}
+          row["stamped_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+          path = Path("compat") / f"{module}.yaml"
+          doc = yaml.safe_load(path.read_text()) if path.is_file() else None
+          doc = doc or {"rows": []}
+          doc.setdefault("rows", []).append(row)  # append-only: history is the point
+
+          header = (
+              f"# compat/{module}.yaml — VERIFIED compat matrix, stamped by\n"
+              "# .github/workflows/compat-stamp.yml. Do not edit by hand (compat/README.md).\n"
+          )
+          path.write_text(header + yaml.safe_dump(doc, sort_keys=False))
+          print(f"stamped {path}: {row['module_ref']} vs {row['airstack_ref']} -> {row['result']}")
+          PYEOF
+
+      - name: Commit and push as github-actions bot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add compat/
+          git commit -m "compat: stamp ${{ github.event.client_payload.module }} @ ${{ github.event.client_payload.module_ref }} vs AirStack ${{ github.event.client_payload.airstack_ref }} (${{ github.event.client_payload.result }})"
+          git push

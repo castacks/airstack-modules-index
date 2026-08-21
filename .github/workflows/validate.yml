@@ -1,0 +1,47 @@
+name: validate
+
+# PR + push gate: every registry entry (modules/*.yaml, stacks/*.yaml) must
+# validate against schema/, and the two hard registration gates from RFC #379
+# §8 — a named maintainer email and a non-empty license — are checked
+# explicitly so they fail loudly even if the schemas ever loosen.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Validate entries against schema/
+        run: python3 tools/validate_entry.py
+
+      - name: Registration gate — maintainer email + non-empty license
+        run: |
+          python3 - <<'PYEOF'
+          import re, sys, yaml
+          from pathlib import Path
+          bad = []
+          for p in sorted(Path("modules").glob("*.yaml")):
+              entry = yaml.safe_load(p.read_text()) or {}
+              if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", str(entry.get("maintainer", ""))):
+                  bad.append(f"{p}: maintainer must be an email address (RFC #379 §8)")
+              if not str(entry.get("license") or "").strip():
+                  bad.append(f"{p}: license must be non-empty (registration gate, RFC #379 §8)")
+          for msg in bad:
+              print(f"::error::{msg}")
+          sys.exit(1 if bad else 0)
+          PYEOF

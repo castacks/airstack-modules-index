@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AirStack registry module entry (modules/<name>.yaml)",
+  "description": "One registered module in the airstack-modules-index (RFC #379 §7, rosdistro pattern). Identity, source pin, and the DECLARED compatibility range only — the VERIFIED compatibility matrix lives in compat/<name>.yaml and is CI-stamped, never hand-edited. Consumed by tools/validate_entry.py, which interprets the same draft-07 subset as trunk's tools/validate_module.py (type, required, properties, enum, pattern, minLength, additionalProperties) plus the x-airstack-format annotations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "repo",
+    "description",
+    "maintainer",
+    "license",
+    "type",
+    "registered_ref",
+    "airstack_compat"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Module identity — must match the `name` in the module repo's module.yaml (lowercase snake_case, starts with a letter). Also the entry filename: modules/<name>.yaml."
+    },
+    "repo": {
+      "type": "string",
+      "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+      "description": "HTTPS GitHub URL of the module repo (no trailing slash, no .git suffix)."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 8,
+      "description": "One-line human description shown in the marketplace catalog — normally copied from module.yaml."
+    },
+    "maintainer": {
+      "type": "string",
+      "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+      "description": "Named maintainer email — required by governance (RFC #379 §8); the canary escalation target."
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "description": "SPDX-style license string — checked at registration (RFC #379 §8) and surfaced in the catalog so e.g. a GPL module in an overlay chain is visible, not buried."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["isaac_extension", "ros_package", "data", "platform"],
+      "description": "Module type — the same enum as module.yaml (platform is future, RFC #380 §6)."
+    },
+    "registered_ref": {
+      "type": "string",
+      "x-airstack-format": "sha-or-tag",
+      "description": "The module ref this entry registers: a full 40-hex commit SHA or a tag (vX.Y.Z). Never a branch name — branch refs rot silently."
+    },
+    "airstack_compat": {
+      "type": "string",
+      "x-airstack-format": "semver-range",
+      "description": "DECLARED compatibility range vs trunk .env VERSION, copied from the module's module.yaml. This is the author's claim; the VERIFIED matrix is compat/<name>.yaml, stamped only by CI runs."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional free-text registration notes (pending tags, validation provenance, placeholders to resolve)."
+    }
+  }
+}

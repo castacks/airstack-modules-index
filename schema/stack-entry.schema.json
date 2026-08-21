@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AirStack registry stack entry (stacks/<name>.yaml)",
+  "description": "One registered stack in the airstack-modules-index (RFC #379 §7). A stack is a self-contained folder in its home repo (modules.repos + launch/ + docker-compose.yaml + wiring.md + README — RFC #379 §3); this entry only points the catalog at it. The docs site embeds the stack's CI-generated wiring.md from the home repo. Consumed by tools/validate_entry.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "repo",
+    "path",
+    "description",
+    "airstack_compat",
+    "wiring"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Stack identity (lowercase snake_case) — the stack folder's basename and this entry's filename: stacks/<name>.yaml."
+    },
+    "repo": {
+      "type": "string",
+      "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+      "description": "HTTPS GitHub URL of the repo hosting the stack folder — castacks/AirStack for trunk reference stacks; stacks need not live in trunk (RFC #379 §3)."
+    },
+    "path": {
+      "type": "string",
+      "pattern": "^stacks/[a-z][a-z0-9_]*$",
+      "description": "Repo-relative path of the stack folder, e.g. stacks/full_default."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 8,
+      "description": "One-line human description shown in the marketplace catalog."
+    },
+    "airstack_compat": {
+      "type": "string",
+      "x-airstack-format": "semver-range",
+      "description": "Trunk semver range the stack was tested against — copied from the airstack_compat: key in the stack's modules.repos (RFC #379 §3). Declared, not verified; the verified claim is a CI-stamped compat matrix / release-set tag."
+    },
+    "wiring": {
+      "type": "string",
+      "x-airstack-format": "safe-relative-path",
+      "description": "Repo-relative path to the stack's CI-generated wiring.md in the home repo — the docs site embeds it on the stack's catalog page. Never hand-edited (RFC #379 §4)."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional free-text registration notes."
+    }
+  }
+}

@@ -4,8 +4,8 @@
 name: dfm2_disturbances
 repo: https://github.com/castacks/asm_dfm2_disturbances
 description: Isaac Sim disturbance library (fan/vent force fields, strobe lights, lens flare)
-maintainer: maintainers@theairlab.org
-license: MIT
+maintainer: ajong@andrew.cmu.edu
+license: BSD-3-Clause-Clear
 type: isaac_extension
 registered_ref: af3daa783248b07b82165833d419d322ab3137fe   # main HEAD, 2026-08-20
 airstack_compat: ">=0.19.0-alpha.18 <0.20.0"               # DECLARED (from module.yaml)

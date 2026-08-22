@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Carnegie Mellon University
-# MIT License - see LICENSE in the repository root for full text.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
 """Validate airstack-modules-index registry entries against the entry schemas.
 
 The registry follows the rosdistro pattern (RFC #379 §7): one YAML per entry,

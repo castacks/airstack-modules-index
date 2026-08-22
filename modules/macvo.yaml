@@ -7,8 +7,8 @@ description: >-
   MAC-VO learned stereo visual odometry (ICRA 2025 best paper) — macvo_ros2
   wrapper around the MAC-VO network, publishing odometry, a covariance-aware
   point cloud, and the disparity image the local planner can consume
-maintainer: maintainers@theairlab.org   # placeholder pending a named maintainer (RFC #379 §8)
-license: MIT
+maintainer: ajong@andrew.cmu.edu   # Andrew Jong (RFC #379 §8)
+license: BSD-3-Clause-Clear
 type: ros_package
 registered_ref: 7d5763936122ffcbb7173a635c9d5711e25c2414   # main HEAD, 2026-08-20
 airstack_compat: ">=0.19.0-alpha.18 <0.20.0"               # DECLARED (from module.yaml)

@@ -1,8 +1,7 @@
 # airstack-modules-index
 
 The **module and stack registry** for [AirStack](https://github.com/castacks/AirStack) —
-the marketplace index from
-[RFC #379 §7](https://github.com/castacks/AirStack/discussions/379), built on the
+the marketplace index, built on the
 **rosdistro pattern**: an index repo of one small YAML per entry, version-pinned
 refs, and CI-verified compatibility. `airstack module search|list|add` reads this
 repo; the AirStack docs site renders it as the marketplace catalog with badges.
@@ -14,7 +13,7 @@ airstack-modules-index/
 ├── stacks/            one YAML per registered stack (trunk reference stacks + external)
 ├── compat/            VERIFIED compatibility matrix — CI-stamped ONLY, never hand-edited
 ├── releases/          release sets: tagged reference-stack pins blessed by one CI run
-├── rfcs/              interface-conventions deprecation RFCs (RFC #379 §8)
+├── rfcs/              interface-conventions deprecation RFCs
 ├── unmaintained/      the shelf: entries whose canary went red and stayed red
 └── tools/             validate_entry.py — the schema gate CI runs on every PR
 ```
@@ -57,13 +56,13 @@ are stamped exclusively by CI runs of `module-system-tests.yml` (via the
 
 **`compat/` is CI-stamped only — never hand-edited.** A PR that hand-writes a
 compat row is rejected on sight; a compatibility claim that isn't CI-verified
-rots (RFC #379, design principle).
+rots — that is the registry's core design principle.
 
-**Badge semantics** (RFC #379 §5, verbatim): a compat badge reads
+**Badge semantics**: a compat badge reads
 "module M @ vM passes marks {…} in a test stack derived from reference stack S,
 on AirStack vX" — conformance to a *stack*, demonstrated by flying it.
 
-## Governance (RFC #379 §8)
+## Governance
 
 - **Maintainer lifecycle.** Every entry names a maintainer (email, required).
   The nightly canary runs registered modules against trunk `develop`; a canary

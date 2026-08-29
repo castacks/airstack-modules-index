@@ -1,0 +1,34 @@
+# Every merged registry change must be mirrored into trunk (the fixture
+# index + committed docs/modules pages — see the trunk sync section in the
+# README). This workflow makes that instant: on any change to the entries,
+# dispatch trunk's sync-modules-index workflow, which opens the trunk sync
+# PR when the mirror actually differs.
+#
+# Auth: the REGISTRY_SYNC_TOKEN secret — a fine-grained PAT on
+# castacks/AirStack with Actions read/write (the same token trunk's
+# sync-modules-index uses to open CI-triggering bot PRs). If the secret is
+# missing or expired this job warns and exits 0: trunk's daily sweep and
+# the develop docs deploy's drift alarm still catch the divergence.
+name: Trigger trunk catalog sync
+on:
+  push:
+    branches: [main]
+    paths:
+      - "modules/**"
+      - "stacks/**"
+  workflow_dispatch:
+permissions: {}
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch sync-modules-index in castacks/AirStack
+        env:
+          GH_TOKEN: ${{ secrets.REGISTRY_SYNC_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning title=REGISTRY_SYNC_TOKEN not set::cannot dispatch trunk sync — trunk's daily sync-modules-index sweep will pick this change up instead"
+            exit 0
+          fi
+          gh workflow run sync-modules-index.yml -R castacks/AirStack --ref develop
+          echo "dispatched: https://github.com/castacks/AirStack/actions/workflows/sync-modules-index.yml"

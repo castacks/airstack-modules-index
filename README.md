@@ -46,6 +46,18 @@ Registered **stacks** get catalog entries too (`stacks/<name>.yaml`): descriptio
 target trunk range, and the docs site embeds the stack's CI-generated `wiring.md`
 from its home repo.
 
+### After your entry merges: the trunk sync
+
+Trunk (castacks/AirStack) keeps a mirror of these entries — the contract-test
+fixture `tests/meta/fixtures/modules_index/` plus the committed
+`docs/modules/` catalog pages — and the docs deploy regenerates the published
+catalog from this **live** registry. The trunk mirror updates automatically:
+the [`sync-modules-index`](https://github.com/castacks/AirStack/actions/workflows/sync-modules-index.yml)
+workflow runs daily (dispatch it manually for an immediate sync) and opens
+the trunk sync PR; the develop docs deploy files a `docs-catalog-drift` issue
+in AirStack whenever trunk and this registry disagree. You don't need to
+hand-edit anything in trunk — just make sure the sync PR gets merged.
+
 ## Compatibility: DECLARED vs VERIFIED
 
 An entry's `airstack_compat` is the **DECLARED** range, copied from the module's

@@ -16,7 +16,7 @@ airstack_compat: ">=0.21.0-dev.10 <0.22.0"   # DECLARED (from module.yaml)
 notes: >-
   Public repo. AirStack's in-tree local planner through 0.20.x, extracted
   with git filter-repo (history preserved) when MIGHTY became the default
-  local planner in 0.21.0-dev.10; older trunks still carry these packages
+  local planner in 0.21.0-dev.11 (compat floor dev.10 is one catalog-only sync earlier); older trunks still carry these packages
   in-tree, hence the compat floor. The droan_gl link deps (assimp / EGL /
   GLFW / GLM) are declared as tier-1 apt deps and enter the robot image via
   `airstack module lock --build` (run by `airstack up` when missing). Pick
